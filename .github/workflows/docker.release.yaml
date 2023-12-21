@@ -12,7 +12,7 @@ jobs:
               GITHUB_CONTEXT: ${{ toJson(github) }}
           run: echo "$GITHUB_CONTEXT"
         #- run: gh repo clone "${{ github.repository }}" .
-        - uses: action/checkout@${{ github.ref_name }}
+        - uses: "action/checkout@${{ github.ref_name }}"
         - run: docker build -t "${{ github.event.repository.name }}" .
         - run: docker save "${{ github.event.repository.name }}" > "$IMAGE"
         - run: gh -y delete "${{ github.ref_name }}" || true
