@@ -1,49 +1,83 @@
-#!/bin/env python3
-import sys,argparse
+#!/usr/bin/env python3
+import sys,argparse,textwrap,ctypes
+from functools import reduce
+import json as jsonlib
 import tomli
 import tomli_w
-class tomllib :
-	def loads(s:str) : return tomli.loads(s)
-	def dumps(obj)   : return tomli_w.dumps(obj)
-import json as jsonlib
-import yaml as yamllib
-
 toml_limits = [
 	'null' ,
 	'single value or single list' ,
+	'bool key' ,
 	'YAML refrence' ,
 ]
+class tomllib :
+	def loads(s:str) : return tomli.loads(s)
+	def dumps(obj)   :
+		try :
+			dump = tomli_w.dumps(obj)
+		except Exception :
+			raise Exception("TOML" , textwrap.dedent(
+				f'''
+				Error when try to ouput TOML.
+				If other formats is valid, maybe {toml_limits} in tree
+				'''
+			).replace('\n','').replace('\r',''))
+		return dump
+import yaml as yamllib
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-j' , action="store_true" , help= '''Input as JSON.''')
-parser.add_argument('-t' , action="store_true" , help= '''Input as TOML.''')
-parser.add_argument('-y' , action="store_true" , help= '''Input as YAML.''')
 
-parser.add_argument('-J' , action="store_true" , help='Output as JSON(default)')
-parser.add_argument('-T' ,  action="store_true" , help=
-f'''
-Output as TOML.
-Note that {toml_limits} is not supported in TOML.
-'''
-)
-parser.add_argument('-Y' , action="store_true" , help=
-'''
-Output as YAML.
-Note that YAML may output a document start/end line "---" or "..."
-'''
-)
-parser.add_argument('-P' , action="store_true" , help=
-'''Output as pure output of py`print()` without newline end.'''
-)
-args = parser.parse_args()
-iof = [None , None]
-load = {
-	
+#Based on input is preffered
+types = {
+	'j' : {
+		type : 'JSON' ,
+		callable : [
+			jsonlib.loads ,
+			lambda s : print(jsonlib.dumps(s)) ,
+		] ,
+	} ,
+	't' : {
+		type : 'TOML' ,
+		callable : [
+			tomllib.loads ,
+			lambda s : print(tomllib.dumps(s)) ,
+		] ,
+	} ,
+	'y' : {
+		type : 'YAML' ,
+		callable : [
+			yamllib.safe_load ,
+			lambda s : print(yamllib.dump(s)) ,
+		] ,
+	} ,
+	'p' : {
+		type : 'Python print' ,
+		callable : [
+			lambda _ : (_ for _ in ()).throw(Exception('It is not recommended parsing python print')) ,
+			print ,
+		] ,
+	} ,
 }
+for t in types :
+	parser.add_argument(f"-{t}" , action="store_true" , help= f'''Input as {types[t][type]}.''')
+	parser.add_argument(f"-{t.upper()}" , action="store_true" , help= f'''output as {types[t][type]}.''')
+args = vars(parser.parse_args())
 
-def loads(tree:str) :
-	if args.y :
-		tree = yamllib.safe_load(tree)
-		return tree
+flag = set(types)
+flag = [
+	list(set(args) & flag) ,
+	list(set(args) - flag) ,
+]
+
+i = list(filter(lambda t:args[t] , flag[0]))
+o = list(filter(lambda t:args[t] , flag[1]))
+for io in [i,o] :
+	if len(io)>1 :
+		raise Exception(
+			f'''Multiple format specified : {[t for t in io if args[t]==True]}'''
+		)
+
+def json3toml3yaml(tree) :
 	try :
 		tree = jsonlib.loads(tree)
 	except Exception as jsone :
@@ -58,19 +92,8 @@ def loads(tree:str) :
 				print(f'YAML : {yamle}' , file=sys.stderr)
 				raise Exception('Format' , 'Details is on the top')
 	return tree
-def dump(todump) :
-	if None : pass
-	elif args.J : print(jsonlib.dumps(todump))
-	elif args.Y : print(yamllib.dump(todump) , end='')
-	elif args.T :
-		try :
-			print(tomllib.dumps(todump) , end='')
-		except Exception :
-			raise Exception("TOML" , textwrap.dedent(
-				f'''
-				Error when try to ouput TOML.
-				If other formats is valid, maybe {toml_limits} in tree
-				'''
-			).replace('\n','').replace('\r',''))
-	elif args.P : print(todump , end='')
-	else : print(jsonlib.dumps(todump) , end='') #`-J` by default
+
+i = types[i.pop()][callable][0] if len(i)>0 else json3toml3yaml
+o = types[o.pop().lower()][callable][1] if len(o)>0 else types['j'][callable][1]
+
+o(i(sys.stdin.read()))
