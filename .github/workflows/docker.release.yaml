@@ -3,7 +3,7 @@ jobs :
     release :
         runs-on : ubuntu-latest
         steps :
-        - uses : actions/checkout@main
+        - uses : lu-jialin/2json@main
         - run : docker build -t 2json .
         - run : docker save 2json > 2json.tar
         - run : docker image prune --all
