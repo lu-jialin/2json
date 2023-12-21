@@ -2,5 +2,7 @@ on : push
 jobs :
     release :
         runs-on : ubuntu-latest
+        env :
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         steps :
         - run : gh repo clone "${{ github.event.repository.name }}"
