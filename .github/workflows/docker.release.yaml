@@ -3,6 +3,4 @@ jobs :
     release :
         runs-on : ubuntu-latest
         steps :
-        -
-            uses : lu-jialin/2json@main
-            run : docker build -t 2json .
+        - run : gh repo clone "${{ github.event.repository.name }}"
