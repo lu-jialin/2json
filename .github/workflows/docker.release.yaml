@@ -1,14 +1,16 @@
-on : push
-jobs :
-    release :
-        runs-on : ubuntu-latest
-        env :
+on: push
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        steps :
-        - name: Dump GitHub context
-          env:
             GITHUB_CONTEXT: ${{ toJson(github) }}
+            IMAGE: ${{ github.event.repository.name }}.image.tar
+        steps:
+        - name: Dump GitHub context
           run: echo "$GITHUB_CONTEXT"
-        - run : gh repo clone "${{ github.repository }}" .
-        - run : docker build -t "${{ github.event.repository.name }}" .
-        - run : docker save "${{ github.event.repository.name }}" > "${{ github.event.repository.name }}".image.tar
+        - run: gh repo clone "${{ github.repository }}" .
+        - run: docker build -t "${{ github.event.repository.name }}" .
+        - run: docker save "${{ github.event.repository.name }}" > "$IMAGE"
+        - run: gh release create "${{ github.ref }}" --generate-notes
+        - run: gh release upload "${{ github.ref }}" "$IMAGE"
