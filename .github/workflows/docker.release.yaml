@@ -6,10 +6,10 @@ jobs:
         runs-on: ubuntu-latest
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GITHUB_CONTEXT: ${{ toJson(github) }}
             IMAGE: ${{ github.event.repository.name }}.image.tar
         steps:
-        - name: Dump GitHub context
+        - env:
+              GITHUB_CONTEXT: ${{ toJson(github) }}
           run: echo "$GITHUB_CONTEXT"
         - run: gh repo clone "${{ github.repository }}" .
         - run: docker build -t "${{ github.event.repository.name }}" .
