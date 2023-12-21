@@ -7,7 +7,6 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             IMAGE: ${{ github.event.repository.name }}.image.tar
-            REF: ${{ github.ref_name }}
         steps:
         - env:
               GITHUB_CONTEXT: ${{ toJson(github) }}
