@@ -5,4 +5,8 @@ jobs :
         env :
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         steps :
+        - name: Dump GitHub context
+          env:
+            GITHUB_CONTEXT: ${{ toJson(github) }}
+          run: echo "$GITHUB_CONTEXT"
         - run : gh repo clone "${{ github.event.repository.name }}"
