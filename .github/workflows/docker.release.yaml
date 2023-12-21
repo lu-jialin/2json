@@ -9,4 +9,6 @@ jobs :
           env:
             GITHUB_CONTEXT: ${{ toJson(github) }}
           run: echo "$GITHUB_CONTEXT"
-        - run : gh repo clone "${{ github.repository }}"
+        - run : gh repo clone "${{ github.repository }}" .
+        - run : docker build -t "${{ github.event.repository.name }}"
+        - run : docker save "${{ github.event.repository.name }}" > "${{ github.event.repository.name }}".image.tar
