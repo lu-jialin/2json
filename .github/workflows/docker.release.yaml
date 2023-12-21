@@ -14,5 +14,5 @@ jobs:
         - run: gh repo clone "${{ github.repository }}" .
         - run: docker build -t "${{ github.event.repository.name }}" .
         - run: docker save "${{ github.event.repository.name }}" > "$IMAGE"
-        - run: gh release create "${{ github.ref }}" --generate-notes
-        - run: gh release upload "${{ github.ref }}" "$IMAGE"
+        - run: gh release create "${{ github.ref_name }}" --generate-notes
+        - run: gh release upload "${{ github.ref_name }}" "$IMAGE"
