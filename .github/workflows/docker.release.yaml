@@ -7,12 +7,13 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             IMAGE: ${{ github.event.repository.name }}.image.tar
+            REF: ${{ github.ref_name }}
         steps:
         - env:
               GITHUB_CONTEXT: ${{ toJson(github) }}
           run: echo "$GITHUB_CONTEXT"
         #- run: gh repo clone "${{ github.repository }}" .
-        - uses: "action/checkout@${{ github.ref_name }}"
+        - uses: action/checkout@$REF
         - run: docker build -t "${{ github.event.repository.name }}" .
         - run: docker save "${{ github.event.repository.name }}" > "$IMAGE"
         - run: gh -y delete "${{ github.ref_name }}" || true
